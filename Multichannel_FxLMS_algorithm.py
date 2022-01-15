@@ -46,22 +46,25 @@ class McFxLMS_algorithm():
         
         console = Console()
         table   = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Layers", style="dim", width=12)
-        table.add_column(f'[{self.r_num}x{self.s_num}x{self.e_num}] McFxLMS algorithm', justify="right")
-        table.add_column("Dimension", justify="right")
-        table.add_column("Elements", justify="right")
+        table.add_column("Layers", style="dim", width=12,justify='center')
+        table.add_column(f'[{self.r_num}x{self.s_num}x{self.e_num}] McFxLMS algorithm', justify="left")
+        table.add_column("Dimension", justify="left")
+        table.add_column("Elements", justify="left")
+        table.add_column("Weights", justify="left")
         
         table.add_row(
-            "1",
+            "-1-",
             "Control filter",
             f'[{self.r_num} x {self.s_num} x {self.len}]',
-            f'{self.r_num*self.s_num}'
+            f'{self.r_num*self.s_num}',
+            f'{self.r_num*self.s_num*self.len}'
         )
         table.add_row(
-            "2",
+            "-2-",
             "Secondary path estimate",
             f'[{self.s_num} x {self.e_num} x {self.ls}]',
-            f'{self.e_num*self.s_num}'
+            f'{self.e_num*self.s_num}',
+            f'{self.s_num*self.e_num*self.ls}'
         )
         
         console.print(table)
@@ -126,7 +129,7 @@ class McFxLMS_algorithm():
 #------------------------------------------------------------------------------
 # Function : train_fxlms_algorithm() 0.00000005
 #------------------------------------------------------------------------------
-def train_fxmclms_algorithm(Model, Ref, Disturbance, Stepsize = 0.1):
+def train_fxmclms_algorithm(Model, Ref, Disturbance, Stepsize = 0.00000005):
     '''
     Parameter:
     param1 - Model : the instance of the multichannel FxLMS algorithm.

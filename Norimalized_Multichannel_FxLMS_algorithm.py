@@ -179,7 +179,7 @@ def train_McFxNLMS_algorithm(Model, Ref, Disturbance, Stepsize = 0.01):
         optimizer.zero_grad() 
         loss.backward()
         optimizer.step()
-        Erro_signal.append(e.cpu().numpy()[1])
+        Erro_signal.append(e.cpu().numpy()[0])
         
     print(bcolors.WARNING + "<<-------------------------------END------------------------------------>>" + bcolors.ENDC)
     return Erro_signal

@@ -89,14 +89,21 @@ def main():
         print(Re2.shape)
         print(SecM2)
         #----------------------------
-        controller = McFxLMS_algorithm(R_num=2, S_num=2, Len=Len_control, Sec=SecM2)
+        #--------------------------------------------
+        if torch.cuda.is_available():
+            device = "cuda"
+        else:
+            device = "cpu"
+        #--------------------------------------------
+        controller = McFxLMS_algorithm(R_num=2, S_num=2, Len=Len_control, Sec=SecM2, device=device)
         
-        Erro = train_fxmclms_algorithm(Model=controller, Ref=Re2, Disturbance=Dis2, Stepsize=0.00001)
+        Erro = train_fxmclms_algorithm(Model=controller, Ref=Re2, Disturbance=Dis2, device=device, Stepsize=0.00001)
         Wc_matrix[ii] = controller._get_coeff_()[0,0,:]
         
+        Err_array = np.array(Erro)
         # Drawing the impulse response of the primary path
         plt.title('The error signal of the FxLMS algorithm')
-        plt.plot(Erro)
+        plt.plot(Err_array[:,0])
         plt.ylabel('Amplitude')
         plt.xlabel('Time')
         plt.grid()

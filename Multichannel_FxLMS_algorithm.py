@@ -15,18 +15,19 @@ from rich.progress import track
 #------------------------------------------------------------
 class McFxLMS_algorithm():
     
-    def __init__(self, R_num, S_num, Len, Sec):
+    def __init__(self, R_num, S_num, Len, Sec, device):
         '''
         Parameters:
         param1 - R_num : the number of the reference microphones.
         param2 - S_num : the number of the secondary source.
         param3 - Len   : the length of the control filter.
-        param4 - Sec   : the secondary path matrix [S_num x E_num x Ls]. 
+        param4 - Sec   : the secondary path matrix [S_num x E_num x Ls].
+        param5 - device: 'GPU' or 'CPUD' 
         '''
-        self.Wc    = torch.zeros(R_num, S_num, Len, requires_grad=True, dtype=torch.float)
-        self.Xd    = torch.zeros(R_num, Len, dtype=torch.float)
-        self.Xdm   = torch.zeros(Sec.shape[2], R_num, Len) # [Ls x R_num x Len]
-        self.Sec   = Sec
+        self.Wc    = torch.zeros(R_num, S_num, Len, requires_grad=True, dtype=torch.float, device=device)
+        self.Xd    = torch.zeros(R_num, Len, dtype=torch.float, device=device)
+        self.Xdm   = torch.zeros(Sec.shape[2], R_num, Len, device=device) # [Ls x R_num x Len]
+        self.Sec   = Sec.to(device)
         #----------------------------#
         # the number of configuration 
         #----------------------------#
@@ -36,7 +37,7 @@ class McFxLMS_algorithm():
         self.len   = Len 
         self.ls    = Sec.shape[2]
         
-        self.Yd    = torch.zeros(S_num, self.ls)
+        self.Yd    = torch.zeros(S_num, self.ls, device=device)
         #------------------------------------------------------#
         # print("<<---------------------------------------------------------------------->>")
         # print(bcolors.OKCYAN + f'Reference Num: {self.r_num}, Secondary source Num: {self.s_num}, Error sensors Num: {self.e_num}'+ bcolors.ENDC)
@@ -124,12 +125,12 @@ class McFxLMS_algorithm():
         return loss, e 
     
     def _get_coeff_(self):
-        return self.Wc.detach().numpy()
+        return self.Wc.cpu().detach().numpy()
 
 #------------------------------------------------------------------------------
 # Function : train_fxlms_algorithm() 0.00000005
 #------------------------------------------------------------------------------
-def train_fxmclms_algorithm(Model, Ref, Disturbance, Stepsize = 0.00000005):
+def train_fxmclms_algorithm(Model, Ref, Disturbance, device, Stepsize = 0.00000005):
     '''
     Parameter:
     param1 - Model : the instance of the multichannel FxLMS algorithm.
@@ -138,6 +139,14 @@ def train_fxmclms_algorithm(Model, Ref, Disturbance, Stepsize = 0.00000005):
     param3 - Disturbance : the distrubance vector [E_num x T].
     param4 - Stepsize : the value of the step size. 
     '''
+    #--------------------------------------------
+    # if torch.cuda.is_available():
+    #     device = "cuda"
+    # else:
+    #     device = "cpu"
+    print(bcolors.OKCYAN + f"Using {device} for training the McFxLMS algorithm !!!" + bcolors.ENDC)
+    #--------------------------------------------
+    
     print(bcolors.WARNING + "<<-------------------------------START---------------------------------->>" + bcolors.ENDC)
     print(f'The length of the data is {Disturbance.shape[1]}.')
     
@@ -146,7 +155,9 @@ def train_fxmclms_algorithm(Model, Ref, Disturbance, Stepsize = 0.00000005):
     
     # bar.start()
     Erro_signal = []
-    len_data = Disturbance.shape[1]
+    len_data    = Disturbance.shape[1]
+    Ref         = Ref.to(device)
+    Disturbance = Disturbance.to(device)
     for itera in track(range(len_data),description="Processing..."):
         # Feedfoward
         xin = Ref[:,itera]
@@ -158,7 +169,7 @@ def train_fxmclms_algorithm(Model, Ref, Disturbance, Stepsize = 0.00000005):
         optimizer.zero_grad() 
         loss.backward()
         optimizer.step()
-        Erro_signal.append(e.numpy()[0])
+        Erro_signal.append(e.cpu().numpy())
         
     print(bcolors.WARNING + "<<-------------------------------END------------------------------------>>" + bcolors.ENDC)
     return Erro_signal

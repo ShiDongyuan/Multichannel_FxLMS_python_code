@@ -142,7 +142,7 @@ class McFxNLMS_algorithm():
 # Function : train_McFxNLMS_algorithm() 0.00000005
 # This function is used to train the the normalized McFxLMS algorithm.
 #------------------------------------------------------------------------------
-def train_McFxNLMS_algorithm(Model, Ref, Disturbance, Stepsize = 0.01):
+def train_McFxNLMS_algorithm(Model, Ref, Disturbance, device, Stepsize = 0.01):
     '''
     Parameter:
     param1 - Model : the instance of the multichannel FxLMS algorithm.
@@ -152,11 +152,11 @@ def train_McFxNLMS_algorithm(Model, Ref, Disturbance, Stepsize = 0.01):
     param4 - Stepsize : the value of the step size. 
     '''
     #--------------------------------------------
-    if torch.cuda.is_available():
-        device = "cuda"
-    else:
-        device = "cpu"
-    print(f"Using {device} for training the McFxLMS algorithm !!!")
+    # if torch.cuda.is_available():
+    #     device = "cuda"
+    # else:
+    #     device = "cpu"
+    print(bcolors.WARNING + f"Using {device} for training the McFxLMS algorithm !!!" + bcolors.ENDC)
     #--------------------------------------------
     
     print(bcolors.WARNING + "<<-------------------------------START---------------------------------->>" + bcolors.ENDC)
@@ -167,11 +167,13 @@ def train_McFxNLMS_algorithm(Model, Ref, Disturbance, Stepsize = 0.01):
     
     # bar.start()
     Erro_signal = []
-    len_data = Disturbance.shape[1]
+    len_data    = Disturbance.shape[1]
+    Ref         = Ref.to(device)
+    Disturbance = Disturbance.to(device)
     for itera in track(range(len_data),description="Processing..."):
         # Feedfoward
-        xin = Ref[:,itera].to(device)
-        dis = Disturbance[:,itera].to(device)
+        xin = Ref[:,itera]
+        dis = Disturbance[:,itera]
         y_anti_AG, y_anti, Xp_e = Model.feedforward(xin)
         loss,e                  = Model.LossFunction(y_anti_AG, y_anti, dis, Xp_e)
             

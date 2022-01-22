@@ -4,7 +4,7 @@ import torch
 import matplotlib.pyplot as plt
 import scipy.io as sio
 
-from Norimalized_Multichannel_FxLMS_algorithm import McFxNLMS_algorithm, train_McFxNLMS_algorithm, Disturbance_Noise_generation_from_Fvector
+from Multichannel_FxLMS_algorithm import McFxLMS_algorithm, train_fxmclms_algorithm
 from scipy.io import savemat
 from scipy import signal
 
@@ -47,13 +47,13 @@ if __name__ == "__main__":
      else:
           device = "cpu"
         
-     controller = McFxNLMS_algorithm(R_num=4, S_num=4, Len=Len_control, Sec=Sec_path, device=device)
-     Erro       = train_McFxNLMS_algorithm(Model=controller, Ref=Refer, Disturbance=Distu, device= device, Stepsize=0.01)
+     controller = McFxLMS_algorithm(R_num=4, S_num=4, Len=Len_control, Sec=Sec_path, device=device)
+     Erro       = train_fxmclms_algorithm(Model=controller, Ref=Refer, Disturbance=Distu, device= device, Stepsize=0.000013)
      Wc_matrix  = controller._get_coeff_()
      
      # Saving the mat 
      Err_array = np.array(Erro)
-     Save_data_to_mat(Mat_file_name ='Tst_4channel_program.mat', Wc_matrix=Wc_matrix, Err_array=Err_array)
+     Save_data_to_mat(Mat_file_name ='Tst_4channel_program_McFxLMS.mat', Wc_matrix=Wc_matrix, Err_array=Err_array)
      print(Err_array.shape)
         
      # Drawing the impulse response of the primary path

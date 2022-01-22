@@ -9,6 +9,15 @@ from scipy.io import savemat
 from scipy import signal
 
 #------------------------------------------------------------
+# Function : Save_data_to_mat()
+#------------------------------------------------------------
+def Save_data_to_mat(Mat_file_name ='Tst_4channel_program.mat', **kwargs):
+     mdict = {}
+     for arg in kwargs:
+          mdict[arg] = kwargs[arg]
+     savemat(Mat_file_name, mdict)
+
+#------------------------------------------------------------
 # Function : Load_noise_path_from_mat()
 # Loading primary path and noise from mat.
 #------------------------------------------------------------
@@ -32,28 +41,34 @@ if __name__ == "__main__":
     #--------------------------------------------
      Len_control = 512 
      num_filters = 16
-     Wc_matrix   = np.zeros((num_filters, Len_control), dtype=float)
+     #Wc_matrix   = np.zeros((num_filters, Len_control), dtype=float)
      if torch.cuda.is_available():
           device = "cuda"
      else:
           device = "cpu"
         
      controller = McFxNLMS_algorithm(R_num=4, S_num=4, Len=Len_control, Sec=Sec_path, device=device)
-     Erro = train_McFxNLMS_algorithm(Model=controller, Ref=Refer, Disturbance=Distu, Stepsize=0.1)
-     Wc_matrix[0] = controller._get_coeff_()[0,0,:]
+     Erro       = train_McFxNLMS_algorithm(Model=controller, Ref=Refer, Disturbance=Distu, Stepsize=0.01)
+     Wc_matrix  = controller._get_coeff_()
+     
+     # Saving the mat 
+     Err_array = np.array(Erro)
+     Save_data_to_mat(Mat_file_name ='Tst_4channel_program.mat', Wc_matrix=Wc_matrix, Err_array=Err_array)
+     print(Err_array.shape)
         
      # Drawing the impulse response of the primary path
      plt.title('The error signal of the FxLMS algorithm')
-     plt.plot(Erro)
+     plt.plot(Err_array[:,0])
      plt.ylabel('Amplitude')
      plt.xlabel('Time')
      plt.grid()
      plt.show()
      
      fs=16000
-     f, Pper_spec = signal.periodogram(Wc_matrix[0] , fs, 'flattop', scaling='spectrum')
+     f, Pper_spec = signal.periodogram(Wc_matrix[0,0,:] , fs, 'flattop', scaling='spectrum')
      plt.semilogy(f, Pper_spec)
      plt.xlabel('frequency [Hz]')
      plt.ylabel('PSD')
      plt.grid()
      plt.show()
+     

@@ -1,3 +1,9 @@
+#   __  __      _____       _   _ _     __  __  ____
+#  |  \/  | ___|  ___|_  __| \ | | |   |  \/  |/ ___|
+#  | |\/| |/ __| |_  \ \/ /|  \| | |   | |\/| |\___ \
+#  | |  | | (__|  _|  >  < | |\  | |___| |  | | ___) |
+#  |_|  |_|\___|_|   /_/\_\|_| \_|_____|_|  |_||____/
+#------------------------------------------------------------
 import torch 
 import numpy        as np 
 import torch.nn     as nn 
@@ -91,7 +97,9 @@ class McFxNLMS_algorithm():
         Sec_rsenl       = self.Sec.unsqueeze(0).unsqueeze(3) #[1 x S_num x E_num x 1 x Ls]
         Xf_rsen         = torch.einsum('resnl,resnl->resn',X_rsenl, Sec_rsenl)
         Xp_rse          = torch.einsum('rsen, rsen->rse',Xf_rsen,Xf_rsen)
-        Xp_e            = torch.einsum('rse->e',Xp_rse) + torch.tensor(1e-12, dtype=torch.float)
+        #Xp_e            = torch.einsum('rse->e',Xp_rse) + torch.tensor(1e-12, dtype=torch.float)
+        Xp_e            = torch.einsum('rse->e',Xp_rse)
+        Xp_e            = Xp_e.masked_fill_(Xp_e==0, float(-1e20))
         
         # ----------Computational Graph route 1 -------------------------------
         # Building the control singal >>--y_mac--<<
